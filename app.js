@@ -3,7 +3,7 @@ import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 // ─── 設定 ───
 const SUPABASE_URL  = "https://sqinymtmpesrxcpbdayt.supabase.co"
 const SUPABASE_KEY  = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNxaW55bXRtcGVzcnhjcGJkYXl0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA3MDU0NTUsImV4cCI6MjA4NjI4MTQ1NX0.8dS36xXDnt_fox-CNUx_SUQJNw0JvRVl_AnEnFen6Yc"
-const API_BASE      = "http://localhost:3000/api"   // Node.js server
+const API_BASE      = "https://stock.artigianoapp.net/api"
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
 
