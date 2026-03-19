@@ -1,132 +1,105 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>交易日誌系統</title>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TradeLog v3</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Noto+Sans+TC:wght@300;400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./styles.css" />
-  <link rel="manifest" href="./manifest.json" />
-  <meta name="theme-color" content="#38bdf8" />
-  <meta name="mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="TradeLog" />
-  <link rel="apple-touch-icon" href="./icons/icon-192.png" />
+  <link rel="stylesheet" href="./styles.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-  <div class="scanlines"></div>
+<div class="scanlines"></div>
+<div class="container">
 
-  <div class="container">
-    <!-- Header -->
-    <header>
-      <div class="logo">
-        <span class="logo-bracket">[</span>
-        TRADE<span class="logo-accent">LOG</span>
-        <span class="logo-bracket">]</span>
-      </div>
-      <div class="auth-bar">
-        <span id="userInfo" class="user-badge">未登入</span>
-        <div class="auth-inputs">
-          <input id="email" placeholder="Email" autocomplete="email"/>
-          <input id="password" type="password" placeholder="Password"/>
-          <button id="loginBtn" class="btn btn-primary">登入 / 註冊</button>
-          <button id="logoutBtn" class="btn btn-ghost">登出</button>
-        </div>
-      </div>
-    </header>
+  <header>
+    <div class="logo">[TRADE<span class="accent">LOG</span>]<span class="version">v3</span></div>
+    <div class="hright">
+      <button id="notifyBtn" class="btn btn-notify">🔔</button>
+      <span id="userInfo" class="user-badge">未登入</span>
+      <button id="authToggle" class="btn btn-ghost">登入</button>
+    </div>
+  </header>
 
-    <!-- Stats Dashboard -->
-    <section class="dashboard" id="dashboard">
-      <div class="stat-card" id="stat-total">
-        <div class="stat-label">總盈虧</div>
-        <div class="stat-value" id="val-total">—</div>
-      </div>
-      <div class="stat-card" id="stat-winrate">
-        <div class="stat-label">勝率</div>
-        <div class="stat-value" id="val-winrate">—</div>
-      </div>
-      <div class="stat-card" id="stat-trades">
-        <div class="stat-label">總交易數</div>
-        <div class="stat-value" id="val-trades">—</div>
-      </div>
-      <div class="stat-card" id="stat-avg">
-        <div class="stat-label">平均盈虧</div>
-        <div class="stat-value" id="val-avg">—</div>
-      </div>
-    </section>
+  <div class="auth-panel" id="authPanel" style="display:none">
+    <input id="email" placeholder="Email" autocomplete="email"/>
+    <input id="password" type="password" placeholder="Password"/>
+    <button id="loginBtn" class="btn btn-primary">登入 / 註冊</button>
+    <button id="logoutBtn" class="btn btn-ghost">登出</button>
+  </div>
 
-    <!-- Mood Analysis Bar -->
-    <section class="mood-analysis" id="moodBar" style="display:none">
-      <div class="section-title">情緒分析</div>
-      <div class="mood-grid" id="moodGrid"></div>
-    </section>
+  <div id="notifyBanner" class="notify-banner" style="display:none">
+    🔔 每日 <strong id="notifyTimeDisplay"></strong> 提醒你回顧交易
+    <button id="notifyOff" class="btn-link">關閉</button>
+  </div>
 
-    <!-- Add Trade Form -->
-    <section class="form-panel">
-      <div class="section-title">
-        <span>新增交易</span>
+  <div id="warningZone"></div>
+
+  <section class="dashboard">
+    <div class="stat-card"><div class="stat-label">總盈虧</div><div class="stat-value" id="val-total">—</div></div>
+    <div class="stat-card"><div class="stat-label">勝率</div><div class="stat-value" id="val-winrate">—</div></div>
+    <div class="stat-card"><div class="stat-label">交易數</div><div class="stat-value" id="val-trades">—</div></div>
+    <div class="stat-card"><div class="stat-label">最大回撤</div><div class="stat-value" id="val-dd">—</div></div>
+  </section>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="record">📋 記錄</button>
+    <button class="tab" data-tab="analysis">🔬 行為分析</button>
+    <button class="tab" data-tab="charts">📊 圖表</button>
+  </div>
+
+  <!-- ════ TAB: 記錄 ════ -->
+  <div class="tab-panel active" id="tab-record">
+    <section class="panel">
+      <div class="panel-title">
+        新增交易
         <button class="toggle-form" id="toggleForm">▼ 展開</button>
       </div>
       <div class="form-body" id="formBody" style="display:none">
         <div class="form-row">
-          <div class="field">
-            <label>標的</label>
-            <input id="symbol" placeholder="AAPL / BTC / ETH"/>
-          </div>
-          <div class="field">
-            <label>方向</label>
+          <div class="field"><label>標的</label><input id="symbol" placeholder="AAPL / BTC"/></div>
+          <div class="field"><label>方向</label>
             <select id="type">
               <option value="LONG">LONG 做多</option>
               <option value="SHORT">SHORT 做空</option>
             </select>
           </div>
+          <div class="field"><label>時段</label>
+            <select id="session">
+              <option value="">— 選擇 —</option>
+              <option>早盤</option><option>午盤</option>
+              <option>收盤</option><option>盤後</option><option>夜盤</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row three">
+          <div class="field"><label>進場價</label><input id="entry" type="number" placeholder="0.00"/></div>
+          <div class="field"><label>出場價</label><input id="exit" type="number" placeholder="0.00"/></div>
+          <div class="field"><label>數量</label><input id="qty" type="number" placeholder="1"/></div>
         </div>
         <div class="form-row">
-          <div class="field">
-            <label>進場價</label>
-            <input id="entry" type="number" placeholder="0.00"/>
-          </div>
-          <div class="field">
-            <label>出場價</label>
-            <input id="exit" type="number" placeholder="0.00"/>
-          </div>
-          <div class="field">
-            <label>數量</label>
-            <input id="qty" type="number" placeholder="1"/>
-          </div>
+          <div class="field"><label>策略 Setup</label><input id="setup" placeholder="突破 / 回踩 / 均線反彈..."/></div>
+          <div class="field"><label>進場理由</label><input id="reason" placeholder="為什麼進這筆？"/></div>
         </div>
-
-        <!-- 進場理由 -->
         <div class="form-row">
           <div class="field full">
-            <label>進場理由</label>
-            <input id="reason" placeholder="技術突破 / 消息面 / 趨勢跟蹤..."/>
-          </div>
-        </div>
-
-        <!-- Tag 系統 -->
-        <div class="form-row">
-          <div class="field full">
-            <label>策略標籤（可多選）</label>
+            <label>行為標籤（可多選）</label>
             <div class="tag-selector" id="tagSelector">
+              <span class="tag-option" data-tag="計畫內">✅ 計畫內</span>
               <span class="tag-option" data-tag="動能">動能</span>
-              <span class="tag-option" data-tag="均值回歸">均值回歸</span>
               <span class="tag-option" data-tag="突破">突破</span>
-              <span class="tag-option" data-tag="趨勢跟蹤">趨勢跟蹤</span>
+              <span class="tag-option" data-tag="回踩">回踩</span>
+              <span class="tag-option" data-tag="趨勢">趨勢</span>
               <span class="tag-option" data-tag="消息面">消息面</span>
-              <span class="tag-option" data-tag="技術分析">技術分析</span>
-              <span class="tag-option" data-tag="套利">套利</span>
-              <span class="tag-option" data-tag="衝動">⚠️ 衝動交易</span>
+              <span class="tag-option" data-tag="追高">⚠️ 追高</span>
+              <span class="tag-option" data-tag="情緒單">⚠️ 情緒單</span>
+              <span class="tag-option" data-tag="報復性">🚨 報復性</span>
             </div>
           </div>
         </div>
-
-        <!-- 情緒記錄 -->
         <div class="form-row">
-          <div class="field">
-            <label>當下情緒</label>
+          <div class="field"><label>情緒</label>
             <select id="mood">
               <option value="">— 選擇 —</option>
               <option value="冷靜">😌 冷靜</option>
@@ -138,60 +111,86 @@
             </select>
           </div>
           <div class="field">
-            <label>信心指數 <span id="confidenceDisplay">3</span>/5</label>
+            <label>信心 <span id="confidenceDisplay">3</span>/5</label>
             <input id="confidence" type="range" min="1" max="5" value="3"/>
           </div>
         </div>
-
         <div class="form-row">
-          <div class="field full">
-            <label>備註</label>
-            <input id="note" placeholder="其他備註..."/>
+          <div class="field checkbox-field">
+            <label class="checkbox-label">
+              <input type="checkbox" id="planned" checked/><span>計畫內交易</span>
+            </label>
           </div>
+          <div class="field checkbox-field">
+            <label class="checkbox-label">
+              <input type="checkbox" id="mistake"/><span>自認錯誤交易</span>
+            </label>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="field full"><label>備註</label><input id="note" placeholder="其他..."/></div>
+        </div>
+
+        <!-- 風險分數卡 -->
+        <div id="riskCard" class="risk-card risk-safe">
+          <div class="risk-left">
+            <span class="risk-label">風險評分</span>
+            <span class="risk-score" id="riskScore">0</span>
+            <span class="risk-max">/10</span>
+          </div>
+          <div class="risk-right" id="riskMsg">填寫欄位後自動評分</div>
         </div>
 
         <button id="addBtn" class="btn btn-add">＋ 記錄交易</button>
       </div>
     </section>
 
-    <!-- Filter Bar -->
     <div class="filter-bar">
-      <div class="section-title">交易紀錄</div>
+      <div class="panel-title">交易紀錄</div>
       <div class="filters">
-        <select id="filterTag">
-          <option value="">全部標籤</option>
-        </select>
+        <select id="filterTag"><option value="">全部標籤</option></select>
         <select id="filterMood">
           <option value="">全部情緒</option>
-          <option value="冷靜">😌 冷靜</option>
-          <option value="自信">💪 自信</option>
-          <option value="焦躁">😤 焦躁</option>
-          <option value="衝動">🔥 衝動</option>
-          <option value="恐懼">😰 恐懼</option>
-          <option value="FOMO">😱 FOMO</option>
+          <option value="冷靜">😌 冷靜</option><option value="自信">💪 自信</option>
+          <option value="焦躁">😤 焦躁</option><option value="衝動">🔥 衝動</option>
+          <option value="恐懼">😰 恐懼</option><option value="FOMO">😱 FOMO</option>
         </select>
         <select id="filterType">
           <option value="">多空</option>
-          <option value="LONG">LONG</option>
-          <option value="SHORT">SHORT</option>
+          <option value="LONG">LONG</option><option value="SHORT">SHORT</option>
         </select>
       </div>
     </div>
-
-    <!-- Trade List -->
-    <section class="list-panel">
-      <ul id="list"></ul>
-      <div class="empty-state" id="emptyState" style="display:none">
-        目前沒有符合的交易紀錄
-      </div>
-    </section>
+    <ul id="list"></ul>
+    <div class="empty-state" id="emptyState" style="display:none">目前沒有符合的紀錄</div>
   </div>
 
-  <script type="module" src="./app.js"></script>
-  <script>
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('./sw.js')
-    }
-  </script>
+  <!-- ════ TAB: 行為分析 ════ -->
+  <div class="tab-panel" id="tab-analysis" style="display:none">
+    <div id="analysisContent">
+      <div class="empty-state">記錄 5 筆以上後，分析會出現在這裡</div>
+    </div>
+  </div>
+
+  <!-- ════ TAB: 圖表 ════ -->
+  <div class="tab-panel" id="tab-charts" style="display:none">
+    <div class="panel">
+      <div class="chart-tabs">
+        <button class="chart-tab active" data-chart="Equity">盈虧曲線</button>
+        <button class="chart-tab" data-chart="Tag">標籤勝率</button>
+        <button class="chart-tab" data-chart="Mood">情緒表現</button>
+        <button class="chart-tab" data-chart="Session">時段分析</button>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="chartEquity"></canvas>
+        <canvas id="chartTag"     style="display:none"></canvas>
+        <canvas id="chartMood"    style="display:none"></canvas>
+        <canvas id="chartSession" style="display:none"></canvas>
+      </div>
+    </div>
+  </div>
+
+</div>
+<script type="module" src="./app.js"></script>
 </body>
 </html>
